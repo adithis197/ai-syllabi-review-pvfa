@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}
+PVFA Review – {{ latest_report if latest_report else "Dashboard" }}
+{% endblock %}
+{% block content %}
+
+<div class="card">
+  <h2>Latest Generated Report</h2>
+
+  {% if latest_report %}
+    <iframe
+      class="pdf-frame"
+      src="/reports/{{ latest_report }}">
+    </iframe>
+  {% else %}
+    <p>No reports generated yet.</p>
+  {% endif %}
+</div>
+
+<div class="card">
+  <h2>All Reports</h2>
+
+  <div class="report-list">
+    {% for pdf in reports %}
+      <a href="/reports/{{ pdf }}" target="_blank">
+        {{ pdf }}
+      </a>
+    {% endfor %}
+  </div>
+</div>
+
+{% endblock %}

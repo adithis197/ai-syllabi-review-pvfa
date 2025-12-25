@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block content %}
+<style>
+  .upload-btn {
+  display: inline-block;
+  padding: 12px 20px;
+  border: 2px dashed #2563eb;
+  border-radius: 8px;
+  background: #eff6ff;
+  color: #1e40af;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.upload-btn:hover {
+  background: #dbeafe;
+  border-color: #1d4ed8;
+}
+
+.file-name {
+  margin-left: 12px;
+  font-size: 14px;
+  color: #374151;
+}
+
+</style>
+<div class="card">
+  <h2>Upload Syllabus PDF</h2>
+
+  <form method="post"
+      action="/upload"
+      enctype="multipart/form-data"
+      onsubmit="showLoading()">
+
+    <input type="file" id="file-upload" name="file" hidden>
+
+    <label for="file-upload" class="upload-btn">
+      📁 Choose Syllabus PDF
+    </label>
+    
+    <span id="file-name" class="file-name">No file chosen</span>
+        <br /><br />
+    <button type="submit">Generate Review Report</button>
+  </form>
+
+  <p style="margin-top:16px; color:#6b7280;">
+    PDF will be reviewed and a compliance report will be generated automatically.
+  </p>
+</div>
+<script>
+  const input = document.getElementById("file-upload");
+  const fileName = document.getElementById("file-name");
+
+  input.addEventListener("change", () => {
+    fileName.textContent = input.files.length
+      ? input.files[0].name
+      : "No file chosen";
+  });
+</script>
+
+{% endblock %}
