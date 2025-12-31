@@ -1,3 +1,5 @@
+from dotenv import load_dotenv
+load_dotenv()
 from fastapi import FastAPI, UploadFile, File, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -6,6 +8,7 @@ import os
 import shutil
 
 from app.pipeline.runner import run_pipeline
+
 
 app = FastAPI()
 

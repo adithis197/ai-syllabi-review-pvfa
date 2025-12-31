@@ -1,10 +1,12 @@
 from app.ingestion.parser import parse_syllabus
 from app.catalog.loader import load_catalog
 from app.pipeline.prompt_builder import build_prompt
-from app.llm.ollama import call_llm, normalize_details
+from app.llm.openai_client import call_llm
+from app.llm.ollama import normalize_details
 from app.reports.formatter import format_report
 from app.reports.report_builder import build_report
 from app.reports.pdf_generator import generate_pdf
+from app.pipeline.matrix import BASE_MATRIX
 
 def normalize_q3_for_single_section(report: dict):
     for item in report["details"]:
@@ -32,6 +34,7 @@ def run_pipeline(syllabus_pdf_path):
     llm_result = call_llm(prompt)   # MUST return dict
     llm_result = normalize_details(llm_result)
     normalize_q3_for_single_section(llm_result)
+    attach_actions(llm_result)
     report = format_report(llm_result)
 
     pdf_path = generate_pdf(report, syllabus["course_code"])
@@ -41,6 +44,27 @@ def run_pipeline(syllabus_pdf_path):
         "pdf": pdf_path,
         "report": report
     }
+
+from app.pipeline.matrix import BASE_MATRIX
+
+COMPLIANT_NO_QUESTIONS = {"Q7", "Q8", "Q9"}
+
+def attach_actions(report: dict):
+    matrix = {q["id"]: q for q in BASE_MATRIX}
+
+    for item in report["details"]:
+        qid = item["id"]
+        answer = item["answer"]
+
+        # Default
+        item["action_required"] = None
+
+        # Non-compliance questions
+        if answer == "No" and qid not in COMPLIANT_NO_QUESTIONS:
+            item["action_required"] = matrix[qid]["action_if_no"]
+
+        # Compliance-by-No questions (Q7–Q9)
+        # No action even if answer is "No"
 
 
 # from app.ingestion.parser import parse_syllabus

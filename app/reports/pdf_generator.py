@@ -85,10 +85,11 @@ def generate_pdf(report: dict, course_code: str) -> str:
 
     # ---------- Action Required Section ----------
     actions = [
-        (item["id"], QUESTION_MAP[item["id"]]["action_if_no"])
-        for item in report["details"]
-        if item.get("action_required")
-    ]
+    (item["id"], item["action_required"])
+    for item in report["details"]
+    if item.get("action_required")
+]
+
 
     if actions:
         if y < 120:

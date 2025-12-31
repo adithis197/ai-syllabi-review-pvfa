@@ -1,8 +1,17 @@
 import re
 from pypdf import PdfReader
 
+COURSE_HEADER_REGEX = re.compile(
+    r"""
+    (?P<codes>[A-Z]{3,4}\s\d{3}(?:\s*/\s*[A-Z]{3,4}\s\d{3})*)   # VIZA 656 / CSCE 647
+    \s+
+    (?P<title>.+?)                                           # Course title
+    \s+
+    Credits\s+(?P<credits>\d+)                               # Credits
+    """,
+    re.VERBOSE
+)
 
-COURSE_CODE_REGEX = r"\b[A-Z]{3,4}\s\d{3}\b"
 
 def normalize_text(text: str) -> str:
     if not text:
@@ -33,52 +42,28 @@ def extract_text_from_pdf(pdf_path: str) -> str:
 
 
 def split_catalog_by_course(text: str) -> dict:
-    matches = list(re.finditer(COURSE_CODE_REGEX, text))
     catalog = {}
+    text = normalize_text(text)
 
-    i = 0
-    while i < len(matches):
-        match = matches[i]
-        course_code = match.group().replace("\u00a0", " ").strip()
+    matches = list(COURSE_HEADER_REGEX.finditer(text))
+
+    for i, match in enumerate(matches):
         start = match.start()
+        end = matches[i + 1].start() if i + 1 < len(matches) else len(text)
 
-        # Step 1: find the first occurrence of "Credits <number>" AFTER this course code
-        credits_match = re.search(
-            r"Credits\s+\d+",
-            text[match.end():],
-            re.IGNORECASE
-        )
+        block = text[start:end].strip()
 
-        if credits_match:
-            credits_end = match.end() + credits_match.end()
-        else:
-            # fallback: behave like old logic
-            credits_end = matches[i + 1].start() if i + 1 < len(matches) else len(text)
+        codes = match.group("codes")
+        title = match.group("title").strip()
 
-        # Step 2: find next course code AFTER credits
-        next_match_index = i + 1
-        while next_match_index < len(matches) and matches[next_match_index].start() < credits_end:
-            next_match_index += 1
-
-        end = (
-            matches[next_match_index].start()
-            if next_match_index < len(matches)
-            else len(text)
-        )
-
-        block = normalize_text(text[start:end])
-        catalog[course_code] = block
-
-        # Step 3: handle immediate cross-listed code (e.g., VIZA 654/CSCE 646)
-        if (
-            i + 1 < len(matches)
-            and text[match.end():matches[i + 1].start()].strip().startswith("/")
-        ):
-            cross_code = matches[i + 1].group().replace("\u00a0", " ").strip()
-            catalog[cross_code] = block
-            i += 2
-        else:
-            i += 1
+        for code in codes.split("/"):
+            code = code.strip()
+            catalog[code] = {
+                "title": title,
+                "description": block,
+                "level": "Graduate"
+            }
 
     return catalog
+
 
