@@ -27,11 +27,25 @@
 </style>
 <div class="card">
   <h2>Upload Syllabus PDF</h2>
+  <div
+  id="errorBanner"
+  style="
+    display: none;
+    background-color: #fdecea;
+    color: #611a15;
+    padding: 10px;
+    margin-bottom: 12px;
+    border-radius: 6px;
+    font-weight: 500;
+  "
+>
+  Only PDF files are allowed.
+</div>
 
   <form method="post"
       action="/upload"
       enctype="multipart/form-data"
-      onsubmit="showLoading()">
+      onsubmit="return validateAndSubmit()">
 
     <input type="file" id="file-upload" name="file" hidden>
 
@@ -45,18 +59,72 @@
   </form>
 
   <p style="margin-top:16px; color:#6b7280;">
-    PDF will be reviewed and a compliance report will be generated automatically.
+    PDF will be reviewed and a compliance report will be generated automatically. Please note that it is AI generated and may have inaccuracies.
   </p>
 </div>
 <script>
-  const input = document.getElementById("file-upload");
-  const fileName = document.getElementById("file-name");
-
-  input.addEventListener("change", () => {
-    fileName.textContent = input.files.length
-      ? input.files[0].name
-      : "No file chosen";
+  const fileInput = document.getElementById("file-upload");
+  const fileNameSpan = document.getElementById("file-name");
+  const errorBanner = document.getElementById("errorBanner");
+  
+  // Update filename display
+  fileInput.addEventListener("change", () => {
+    if (!fileInput.files.length) {
+      fileNameSpan.innerText = "No file chosen";
+      return;
+    }
+  
+    const file = fileInput.files[0];
+    fileNameSpan.innerText = file.name;
+  
+    // Instant validation on select
+    if (!isPDF(file)) {
+      showError("Only PDF files are allowed.");
+      fileInput.value = "";
+      fileNameSpan.innerText = "No file chosen";
+    } else {
+      hideError();
+    }
   });
-</script>
+  
+  function isPDF(file) {
+    return (
+      file.type === "application/pdf" ||
+      file.name.toLowerCase().endsWith(".pdf")
+    );
+  }
+  
+  function showError(message) {
+    errorBanner.innerText = message;
+    errorBanner.style.display = "block";
+  }
+  
+  function hideError() {
+    errorBanner.style.display = "none";
+  }
+  
+  function validateAndSubmit() {
+    if (!fileInput.files.length) {
+      showError("Please select a PDF file.");
+      return false;
+    }
+  
+    const file = fileInput.files[0];
+  
+    if (!isPDF(file)) {
+      showError("Only PDF files are allowed.");
+      fileInput.value = "";
+      fileNameSpan.innerText = "No file chosen";
+      return false;
+    }
+  
+    hideError();
+  
+    // ✅ Only now show loading & allow submit
+    showLoading();
+    return true;
+  }
+  </script>
+  
 
 {% endblock %}

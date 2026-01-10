@@ -6,7 +6,7 @@ from fastapi.templating import Jinja2Templates
 from fastapi.responses import RedirectResponse
 import os
 import shutil
-
+from pathlib import Path
 from app.pipeline.runner import run_pipeline
 
 
@@ -49,8 +49,11 @@ async def upload_syllabus(file: UploadFile = File(...)):
 
 @app.get("/dashboard")
 def dashboard(request: Request, open: str | None = None):
+    output_dir = Path("output")
+
     reports = sorted(
-        os.listdir("output"),
+        [f.name for f in output_dir.iterdir() if f.is_file()],
+        key=lambda x: (output_dir / x).stat().st_mtime,
         reverse=True
     )
 

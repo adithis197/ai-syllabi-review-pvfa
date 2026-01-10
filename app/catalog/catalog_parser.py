@@ -66,4 +66,3 @@ def split_catalog_by_course(text: str) -> dict:
 
     return catalog
 
-
